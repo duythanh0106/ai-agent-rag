@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BD Chat - Deepseek AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/+esm"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #10a37f;
+            --secondary-color: #ececf1;
+            --text-dark: #0d0d0d;
+            --text-light: #565869;
+            --bg-light: #ffffff;
+            --bg-dark: #f7f7f8;
+            --border-color: #d1d5db;
+            --user-bg: #10a37f;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: var(--bg-dark);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-light);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 12px;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        .sidebar-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .new-chat-btn {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--text-dark);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .new-chat-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Knowledge Base Section */
+        .kb-section {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .kb-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .kb-header i {
+            color: var(--primary-color);
+        }
+
+        .kb-files {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 8px;
+        }
+
+        .kb-placeholder {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 12px;
+            padding: 12px;
+        }
+
+        .kb-file-item {
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #e0e6ed;
+            transition: all 0.2s;
+        }
+
+        .kb-file-item:hover {
+            background: #f9f9f9;
+            border-color: var(--primary-color);
+        }
+
+        .kb-file-name {
+            flex: 1;
+            color: var(--text-dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .kb-file-name i {
+            color: var(--primary-color);
+            font-size: 10px;
+        }
+
+        .kb-file-delete {
+            background: none;
+            border: none;
+            color: #dc2626;
+            cursor: pointer;
+            padding: 4px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .kb-file-delete:hover {
+            color: white;
+            background: #dc2626;
+            border-radius: 3px;
+        }
+
+        .kb-upload-btn {
+            width: 100%;
+            padding: 8px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .kb-upload-btn:hover {
+            background: #0a8d6b;
+        }
+
+        /* Conversations Section */
+        .conversations-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .conversations-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .conversations-header i {
+            color: var(--primary-color);
+        }
+
+        .conversation-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .conversation-item {
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-light);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+
+        .conversation-item:hover {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        /* Main chat area */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-light);
+        }
+
+        .chat-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-light);
+        }
+
+        .chat-header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-light);
+            font-size: 16px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            gap: 16px;
+            background: var(--bg-light);
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: var(--text-light);
+            margin: auto;
+            padding: 40px 20px;
+        }
+
+        .welcome-message h2 {
+            font-size: 32px;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .welcome-message p {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .message-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-group.user {
+            justify-content: flex-end;
+        }
+
+        .message-group.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .message-group.user .message-avatar {
+            background: var(--user-bg);
+        }
+
+        .message-group.assistant .message-avatar {
+            background: var(--primary-color);
+        }
+
+        .message-content-wrapper {
+            max-width: 70%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .message-content {
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            line-height: 1.6;
+            font-size: 15px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* Markdown styling */
+        .message-content h1,
+        .message-content h2,
+        .message-content h3,
+        .message-content h4,
+        .message-content h5,
+        .message-content h6 {
+            margin: 12px 0 8px 0;
+            font-weight: 600;
+        }
+
+        .message-content h1 { font-size: 1.5em; }
+        .message-content h2 { font-size: 1.3em; }
+        .message-content h3 { font-size: 1.1em; }
+
+        .message-content p {
+            margin: 8px 0;
+        }
+
+        .message-content ul,
+        .message-content ol {
+            margin: 8px 0 8px 24px;
+        }
+
+        .message-content li {
+            margin: 4px 0;
+        }
+
+        .message-content code {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .message-content pre {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 8px 0;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .message-content pre code {
+            background: none;
+            padding: 0;
+            border-radius: 0;
+        }
+
+        .message-content blockquote {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 12px;
+            margin: 8px 0;
+            color: var(--text-light);
+            font-style: italic;
+        }
+
+        .message-content strong {
+            font-weight: 600;
+        }
+
+        .message-content em {
+            font-style: italic;
+        }
+
+        .message-content a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .message-content a:hover {
+            text-decoration: underline;
+        }
+
+        .message-content table {
+            border-collapse: collapse;
+            margin: 8px 0;
+            width: 100%;
+        }
+
+        .message-content th,
+        .message-content td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .message-content th {
+            background: #f5f5f5;
+            font-weight: 600;
+        }
+
+        .message-group.user .message-content {
+            background: var(--user-bg);
+            color: white;
+        }
+
+        .message-content-markdown {
+            color: white;
+        }
+
+        .message-content-markdown h1,
+        .message-content-markdown h2,
+        .message-content-markdown h3 {
+            color: white;
+        }
+
+        .message-content-markdown code {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .message-content-markdown blockquote {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .message-group.assistant .message-content {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        .message-group.loading .message-content {
+            background: var(--bg-dark);
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            animation: bounce 1.4s infinite;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% { opacity: 0.5; }
+            40% { opacity: 1; }
+        }
+
+        .sources-box {
+            background: #f0f4f8;
+            border-left: 4px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 13px;
+            max-width: 70%;
+        }
+
+        .sources-box strong {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+        }
+
+        .source-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e6ed;
+            color: var(--text-light);
+        }
+
+        .source-item:last-child {
+            border-bottom: none;
+        }
+
+        .source-title {
+            font-weight: 500;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+
+        .source-score {
+            font-size: 12px;
+            color: var(--primary-color);
+        }
+
+        .source-text {
+            font-size: 12px;
+            margin-top: 4px;
+            color: var(--text-light);
+            line-height: 1.4;
+        }
+
+        /* Input area */
+        .input-container {
+            padding: 24px;
+            background: var(--bg-light);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .input-field {
+            flex: 1;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 16px;
+            transition: all 0.2s;
+        }
+
+        .input-field:focus-within {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(16, 163, 127, 0.1);
+        }
+
+        input[type="text"] {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            color: var(--text-dark);
+            outline: none;
+            font-family: inherit;
+        }
+
+        input[type="text"]::placeholder {
+            color: var(--text-light);
+        }
+
+        .k-selector {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-light);
+            font-size: 12px;
+        }
+
+        .k-selector input {
+            width: 40px;
+            padding: 4px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--text-dark);
+        }
+
+        .send-btn {
+            width: 32px;
+            height: 32px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-light);
+            font-size: 16px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            color: var(--primary-color);
+            background: rgba(16, 163, 127, 0.1);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: #dc2626;
+            padding: 12px 16px;
+            background: #fee2e2;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .delete-btn {
+            color: #dc2626;
+        }
+
+        .delete-btn:hover {
+            background: #fee2e2;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .message-content-wrapper {
+                max-width: 100%;
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <button class="new-chat-btn" onclick="newChat()" title="New Chat">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+
+            <!-- Knowledge Base Section -->
+            <div class="kb-section">
+                <div class="kb-header">
+                    <i class="fas fa-database"></i>
+                    <span>Knowledge Base</span>
+                </div>
+                <div class="kb-files" id="kbFiles">
+                    <div class="kb-placeholder">No files loaded</div>
+                </div>
+                <button class="kb-upload-btn" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-upload"></i> Upload
+                </button>
+                <input type="file" id="fileInput" style="display: none;" accept=".pdf,.docx,.txt">
+            </div>
+
+            <!-- Conversations Section -->
+            <div class="conversations-section">
+                <div class="conversations-header">
+                    <i class="fas fa-history"></i>
+                    <span>Conversations</span>
+                </div>
+                <div class="conversation-list" id="conversationList"></div>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="chat-header-title">BD Chatbot</div>
+                <div class="header-actions">
+                    <button class="icon-btn" id="settingsBtn" title="Settings">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button class="icon-btn delete-btn" title="Clear chat" onclick="clearChat()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="messages-area" id="messagesArea">
+                <div class="welcome-message">
+                    <h2>BD Chatbot</h2>
+                    <p>Trợ lý thông minh dựa trên tài liệu của bạn</p>
+                    <p style="font-size: 14px; color: var(--text-light);">Hỏi tôi bất kỳ điều gì về tài liệu</p>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <div class="input-field">
+                        <input 
+                            type="text" 
+                            id="questionInput" 
+                            placeholder="Nhập câu hỏi của bạn..."
+                            autocomplete="off"
+                        >
+                        <div class="k-selector">
+                            <label for="kValue">K:</label>
+                            <input 
+                                type="number" 
+                                id="kValue" 
+                                value="5" 
+                                min="1" 
+                                max="20"
+                                title="Số tài liệu để lấy"
+                            >
+                        </div>
+                        <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Gửi">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+        const messagesArea = document.getElementById("messagesArea");
+        const questionInput = document.getElementById("questionInput");
+        const kValue = document.getElementById("kValue");
+        const sendBtn = document.getElementById("sendBtn");
+
+        let conversationHistory = [];
+        let isLoading = false;
+
+        // Nhấn Enter để gửi
+        questionInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter" && !e.shiftKey && !isLoading) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Focus vào input khi load trang
+        window.addEventListener("load", () => {
+            questionInput.focus();
+            checkAPI();
+        });
+
+        async function checkAPI() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                if (!response.ok) {
+                    showErrorMessage("⚠️ API không khả dụng. Vui lòng khởi động server API.");
+                }
+            } catch (error) {
+                showErrorMessage("❌ Không thể kết nối đến API. Vui lòng khởi động server bằng lệnh: python api.py");
+            }
+        }
+
+        async function sendMessage() {
+            const question = questionInput.value.trim();
+            if (!question || isLoading) return;
+
+            isLoading = true;
+            sendBtn.disabled = true;
+
+            // Clear welcome message on first message
+            if (conversationHistory.length === 0 && messagesArea.querySelector('.welcome-message')) {
+                messagesArea.innerHTML = '';
+            }
+
+            // Add user message
+            addMessage("user", question, false);
+            conversationHistory.push({ role: "user", content: question });
+            questionInput.value = "";
+
+            // Add loading message
+            const loadingDiv = document.createElement("div");
+            loadingDiv.className = "message-group loading";
+            loadingDiv.innerHTML = `
+                <div class="message-avatar">🤖</div>
+                <div class="message-content-wrapper">
+                    <div class="message-content">
+                        <div class="loading-dots">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            messagesArea.appendChild(loadingDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+
+            try {
+                const response = await fetch(`${API_URL}/query`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        k: parseInt(kValue.value)
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || `HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                loadingDiv.remove();
+
+                // Add assistant message with markdown parsing
+                addMessage("assistant", data.answer, true);
+                conversationHistory.push({ role: "assistant", content: data.answer });
+
+                // Add sources
+                if (data.sources && data.sources.length > 0) {
+                    const sourcesDiv = document.createElement("div");
+                    sourcesDiv.className = "message-group assistant";
+                    sourcesDiv.innerHTML = `
+                        <div class="message-avatar">📚</div>
+                        <div class="message-content-wrapper">
+                            <div class="sources-box">
+                                <strong>📄 Nguồn tài liệu liên quan (${data.sources.length}):</strong>
+                                ${data.sources.map((s, idx) => `
+                                    <div class="source-item">
+                                        <div class="source-title">📌 ${s.id || `Chunk ${idx + 1}`}</div>
+                                        <div class="source-score">Score: ${s.score?.toFixed(4) || 'N/A'}</div>
+                                        ${s.text ? `<div class="source-text">"${s.text.substring(0, 150)}..."</div>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    messagesArea.appendChild(sourcesDiv);
+                }
+
+                saveConversation();
+
+            } catch (error) {
+                loadingDiv.remove();
+                showErrorMessage(`❌ ${error.message}`);
+            }
+
+            isLoading = false;
+            sendBtn.disabled = false;
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+            questionInput.focus();
+        }
+
+        async function addMessage(role, content, isMarkdown = false) {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `message-group ${role}`;
+            
+            const avatar = role === "user" ? "👤" : "🤖";
+            
+            let htmlContent = content;
+            if (isMarkdown) {
+                try {
+                    htmlContent = await marked.parse(content);
+                } catch (e) {
+                    // Fallback to escaped text if markdown parsing fails
+                    htmlContent = escapeHtml(content);
+                }
+            } else {
+                htmlContent = escapeHtml(content);
+            }
+            
+            const contentClass = isMarkdown && role === "user" ? "message-content message-content-markdown" : "message-content";
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content-wrapper">
+                    <div class="${contentClass}">${htmlContent}</div>
+                </div>
+            `;
+
+            messagesArea.appendChild(messageDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        function showErrorMessage(message) {
+            const errorDiv = document.createElement("div");
+            errorDiv.className = "error-message";
+            errorDiv.textContent = message;
+            messagesArea.appendChild(errorDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function newChat() {
+            if (conversationHistory.length > 0) {
+                saveConversation();
+            }
+            conversationHistory = [];
+            messagesArea.innerHTML = `
+                <div class="welcome-message">
+                    <h2>BD Chatbot</h2>
+                    <p>Trợ lý thông minh dựa trên tài liệu của bạn</p>
+                    <p style="font-size: 14px; color: var(--text-light);">Hỏi tôi bất kỳ điều gì về tài liệu</p>
+                </div>
+            `;
+            questionInput.value = "";
+            questionInput.focus();
+        }
+
+        function clearChat() {
+            if (confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này?")) {
+                newChat();
+            }
+        }
+
+        function saveConversation() {
+            if (conversationHistory.length > 0) {
+                const conversations = JSON.parse(localStorage.getItem("conversations") || "[]");
+                const title = conversationHistory[0].content.substring(0, 50);
+                conversations.push({
+                    id: Date.now(),
+                    title: title,
+                    messages: conversationHistory,
+                    timestamp: new Date().toLocaleString()
+                });
+                localStorage.setItem("conversations", JSON.stringify(conversations));
+            }
+        }
+
+        // File Upload Handler
+        const fileInput = document.getElementById("fileInput");
+        fileInput.addEventListener("change", async (e) => {
+            const files = e.target.files;
+            if (files.length === 0) return;
+
+            for (let file of files) {
+                await uploadFile(file);
+            }
+            fileInput.value = "";
+        });
+
+        async function uploadFile(file) {
+            // Check file size (max 50MB)
+            if (file.size > 50 * 1024 * 1024) {
+                showErrorMessage(`❌ File quá lớn: ${file.name} (max 50MB)`);
+                return;
+            }
+
+            // Check file type
+            const allowedTypes = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain"];
+            if (!allowedTypes.includes(file.type) && !file.name.endsWith(".pdf") && !file.name.endsWith(".docx") && !file.name.endsWith(".txt")) {
+                showErrorMessage(`❌ Loại file không được hỗ trợ: ${file.type}`);
+                return;
+            }
+
+            // Add file to knowledge base display
+            const kbFiles = document.getElementById("kbFiles");
+            const placeholder = kbFiles.querySelector(".kb-placeholder");
+            if (placeholder) placeholder.remove();
+
+            const fileItem = document.createElement("div");
+            fileItem.className = "kb-file-item";
+            fileItem.id = `file-${file.name}`;
+            fileItem.innerHTML = `
+                <div class="kb-file-name">
+                    <i class="fas fa-file"></i>
+                    <span title="${file.name}">${file.name}</span>
+                </div>
+                <button class="kb-file-delete" onclick="deleteFile('${file.name}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            kbFiles.appendChild(fileItem);
+
+            // Save to localStorage
+            const kbList = JSON.parse(localStorage.getItem("knowledgeBase") || "[]");
+            kbList.push({
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                addedAt: new Date().toLocaleString()
+            });
+            localStorage.setItem("knowledgeBase", JSON.stringify(kbList));
+
+            showSuccessMessage(`✅ Đã thêm: ${file.name}`);
+        }
+
+        function deleteFile(fileName) {
+            if (confirm(`Xóa ${fileName}?`)) {
+                document.getElementById(`file-${fileName}`).remove();
+                
+                const kbList = JSON.parse(localStorage.getItem("knowledgeBase") || "[]");
+                const updated = kbList.filter(f => f.name !== fileName);
+                localStorage.setItem("knowledgeBase", JSON.stringify(updated));
+
+                const kbFiles = document.getElementById("kbFiles");
+                if (kbFiles.children.length === 0) {
+                    kbFiles.innerHTML = '<div class="kb-placeholder">No files loaded</div>';
+                }
+                
+                showSuccessMessage(`✅ Đã xóa: ${fileName}`);
+            }
+        }
+
+        function showSuccessMessage(message) {
+            const msgDiv = document.createElement("div");
+            msgDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #d1fae5;
+                color: #065f46;
+                padding: 12px 20px;
+                border-radius: 8px;
+                font-size: 14px;
+                z-index: 9999;
+                animation: slideInRight 0.3s ease;
+            `;
+            msgDiv.textContent = message;
+            document.body.appendChild(msgDiv);
+
+            setTimeout(() => msgDiv.remove(), 3000);
+        }
+
+        // Load knowledge base on page load
+        window.addEventListener("load", () => {
+            questionInput.focus();
+            checkAPI();
+            loadKnowledgeBase();
+        });
+
+        function loadKnowledgeBase() {
+            const kbList = JSON.parse(localStorage.getItem("knowledgeBase") || "[]");
+            const kbFiles = document.getElementById("kbFiles");
+            
+            if (kbList.length > 0) {
+                kbFiles.innerHTML = "";
+                kbList.forEach(file => {
+                    const fileItem = document.createElement("div");
+                    fileItem.className = "kb-file-item";
+                    fileItem.id = `file-${file.name}`;
+                    fileItem.innerHTML = `
+                        <div class="kb-file-name">
+                            <i class="fas fa-file"></i>
+                            <span title="${file.name}">${file.name}</span>
+                        </div>
+                        <button class="kb-file-delete" onclick="deleteFile('${file.name}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    kbFiles.appendChild(fileItem);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
